@@ -42,7 +42,10 @@ function onSocketReadable(socket){
     let messageLength = 0 
     if (lengthIndicatorInBits <= SEVEN_BITS_INTEGER_MARKER) {
         messageLength = lengthIndicatorInBits 
-    }else {
+    }else if ( lengthIndicatorInBits === SEVEN_BITS_INTEGER_MARKER ){
+        messageLength = socket.read(2).readUint16BE(0)
+    }
+    else {
         throw new Error("Your message is too long")
     }
 
@@ -80,7 +83,17 @@ function prepareMesssage(msgData){
         const bytes = [firstByte ]
         dataFrameBuffer = Buffer.from(bytes.concat(messageSize))
 
-    }else {
+    } else if (messageSize <= 2**16 ) {
+        const targetBytes = 4 
+        const target = Buffer.allocUnsafe(targetBytes)
+
+        target[0] = firstByte 
+        target[1] = SIXTEEN_BITS_INTEGER_MARKER | 0x0
+
+        target.writeUint16BE(messageSize, 2 )
+        dataFrameBuffer = target 
+    }
+    else {
         throw new Error("message too long")
     }
 
