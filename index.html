@@ -8,20 +8,24 @@
 </head>
 <body>
     <div id="messages"></div>
+   
      <script>
          const messages = document.getElementById("messages")
-
+         
          const socket = new WebSocket('ws://localhost:3006')
 
          socket.onopen = (event)=> {  
             console.log("connected to websocket server")
             const data = JSON.stringify({
-              name: "petee"
+              name: "peter"
             })
-
+           
            socket.send(data)
          }
-         socket.onmessage = (message)=> { console.log(message)}
+         socket.onmessage = (msg)=> { 
+            console.log(msg)
+            messages.innerHTML  = `<h1>${msg.data}</h1>`
+        }
          socket.onerror =  (error) => { console.error(`websocket error from  ${error}`)}
          socket.onclose = (event)=> { console.log("Disconnected from websocket server") }
 

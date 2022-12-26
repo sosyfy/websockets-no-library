@@ -56,10 +56,56 @@ function onSocketReadable(socket){
 
     const data = JSON.parse(received)
 
-    console.log(data);
+
+  
+    sendMessage(socket , "Sending a Message")
+
+}
+
+function sendMessage(socket , data ){
+     const message = prepareMesssage(data)
+     socket.write(message)
+}
+
+function prepareMesssage(msgData){
+
+    const msg = Buffer.from(msgData)
+    const messageSize = msg.length 
+
+    let dataFrameBuffer;
+    let offset = 2 ;
+
+    const firstByte = 0x80 | 0x001 // 1 bit in binary 
+    if (messageSize <= SEVEN_BITS_INTEGER_MARKER ){
+        const bytes = [firstByte ]
+        dataFrameBuffer = Buffer.from(bytes.concat(messageSize))
+
+    }else {
+        throw new Error("message too long")
+    }
+
+    const totalLength = dataFrameBuffer.byteLength + messageSize 
+    const dataFramerResponse = concat([dataFrameBuffer , msg ], totalLength )
+
+    return dataFramerResponse
+
+}
+
+function concat( bufferList , totalLength){
+    const target = Buffer.allocUnsafe(totalLength)
+    let offset = 0 
+    for (const buffer of bufferList ){
+       target.set(buffer , offset )
+       offset += buffer.length
+    }
+    return target 
 }
 
 function unmask( encodedBuffer , maskKey ){
+    //  code from docs
+    // ^ means XOR 
+    // returns 1 if both are different and 0 if they are the same 
+    // i % 4 === 0,1,2,3 = index bits needed to decode the message 
 
     const finalBuffer = Buffer.from(encodedBuffer)
     
@@ -95,7 +141,7 @@ function createSocketAcceptKey(id){
 
 events.forEach(event => {
     process.on( event , err => {
-        console.error(`something bad happened event: ${event} , msg: ${err}` );
+        console.error(`something bad happened event: ${event} , msg: ${err.stack}` );
     }) 
 });
 
