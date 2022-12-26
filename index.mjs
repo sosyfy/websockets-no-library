@@ -16,15 +16,14 @@ const server = createServer( ( request , response )=>{
 
 server.listen( 3006, function(){console.log( "server started")});
 
-server.on( "upgrade" , onSocketUpgrade )
+server.on("upgrade" , onSocketUpgrade )
 
 function onSocketUpgrade(req, socket , head ){
     const { "sec-websocket-key" : webClientSocketKey } = req.headers;
     const headers = prepareHandshakeHeaders(webClientSocketKey);
     
-    console.log(headers);
     socket.write(headers)
-    socket.on( "readable" , () => onSocketReadable(socket))
+    socket.on("readable" , () => onSocketReadable(socket))
 }
 
 function onSocketReadable(socket){
@@ -59,9 +58,7 @@ function onSocketReadable(socket){
 
     const data = JSON.parse(received)
 
-
-  
-    sendMessage(socket , "Sending a Message")
+    sendMessage(socket , received)
 
 }
 
@@ -76,7 +73,7 @@ function prepareMesssage(msgData){
     const messageSize = msg.length 
 
     let dataFrameBuffer;
-    let offset = 2 ;
+   
 
     const firstByte = 0x80 | 0x001 // 1 bit in binary 
     if (messageSize <= SEVEN_BITS_INTEGER_MARKER ){

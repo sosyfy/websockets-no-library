@@ -7,24 +7,45 @@
     <title>Sockets</title>
 </head>
 <body>
+    <form>
+        Name: <input type="text" id="name"/>
+        <br><br>
+        Age: <input type="text" id="age"/>
+        <br><br>
+        <input type="button" value="Show Details" onclick="showDetails()"/>
+    </form>
+    
     <div id="messages"></div>
-   
+
      <script>
          const messages = document.getElementById("messages")
+         const messageToSend = document.getElementById("message")
          
+         
+
+
+         function showDetails(){
+            var empName = document.getElementById('name').value;
+            var empAge = document.getElementById('age').value;
+
+            const data = JSON.stringify({
+                name: empName,
+                age: empAge
+              })
+
+            socket.send(data)
+         }
+
          const socket = new WebSocket('ws://localhost:3006')
 
          socket.onopen = (event)=> {  
             console.log("connected to websocket server")
-            const data = JSON.stringify({
-              name: "peter"
-            })
-           
-           socket.send(data)
          }
+         
          socket.onmessage = (msg)=> { 
             console.log(msg)
-            messages.innerHTML  = `<h1>${msg.data}</h1>`
+
+            messages.innerHTML  = `<h1>name :${JSON.parse(msg.data)?.name}</h1> <h1>Age :${JSON.parse(msg.data)?.age}</h1>`
         }
          socket.onerror =  (error) => { console.error(`websocket error from  ${error}`)}
          socket.onclose = (event)=> { console.log("Disconnected from websocket server") }
