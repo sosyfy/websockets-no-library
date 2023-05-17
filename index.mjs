@@ -1,14 +1,17 @@
 import { createServer } from 'http'
 import crypto from "crypto"
-const PORT = 3444
-const WEB_SOCKETS_MAGIC_STRING = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
-const SEVEN_BITS_INTEGER_MARKER = 125
-const SIXTEEN_BITS_INTEGER_MARKER = 126
-const SIXTY_FOUR_BITS_INTEGER_MARKER = 127
 
-const MASK_KEY_INDICATOR_BYTES_LENGTH = 4
 
-const FIRST_BIT = 128 //parseInt("1000000" ,2 )
+const PORT = 3444; // Port number on which the server will listen
+const WEB_SOCKETS_MAGIC_STRING = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'; // Magic string used for WebSocket handshake
+const SEVEN_BITS_INTEGER_MARKER = 125; // Marker for 7-bit payload length
+const SIXTEEN_BITS_INTEGER_MARKER = 126; // Marker for 16-bit payload length
+const SIXTY_FOUR_BITS_INTEGER_MARKER = 127; // Marker for 64-bit payload length
+const MASK_KEY_INDICATOR_BYTES_LENGTH = 4; // Length of the mask key indicator in bytes
+const FIRST_BIT = 128; // First bit value used in bitwise operations
+
+
+// Creating the HTTP server
 
 const server = createServer( ( request , response )=>{
    response.end("Hey there")
@@ -16,10 +19,14 @@ const server = createServer( ( request , response )=>{
 
 server.listen( 3006, function(){console.log( "server started")});
 
+
+// Handling the upgrade event when a WebSocket connection is requested
 server.on("upgrade" , onSocketUpgrade )
 
 function onSocketUpgrade(req, socket , head ){
+    // Retrieving the client's WebSocket key from the headers
     const { "sec-websocket-key" : webClientSocketKey } = req.headers;
+     // Preparing the handshake headers using the WebSocket key
     const headers = prepareHandshakeHeaders(webClientSocketKey);
     
     socket.write(headers)
@@ -53,6 +60,7 @@ function onSocketReadable(socket){
     const encodedBuffer = socket.read(messageLength)
 
     const decoded = unmask(encodedBuffer , maskKey )
+    // Converting the decoded buffer to a string and sending a response back to the client
 
     const received = decoded.toString("utf8")
 
@@ -62,12 +70,15 @@ function onSocketReadable(socket){
 
 }
 
+
+ // Writing the message to the socket
+
 function sendMessage(socket , data ){
-     const message = prepareMesssage(data)
+     const message = prepareMessage(data)
      socket.write(message)
 }
 
-function prepareMesssage(msgData){
+function prepareMessage(msgData){
 
     const msg = Buffer.from(msgData)
     const messageSize = msg.length 
@@ -126,6 +137,7 @@ function unmask( encodedBuffer , maskKey ){
     return finalBuffer
 }
 
+// Preparing handshake headers
 function prepareHandshakeHeaders(id){
    const acceptKey = createSocketAcceptKey(id)
    const headers = [
@@ -139,6 +151,7 @@ function prepareHandshakeHeaders(id){
    return headers
 }
 
+ // Generating the socket accept key by digesting the hash in base64 format
 function createSocketAcceptKey(id){
     const shaun = crypto.createHash("sha1")
     shaun.update(id + WEB_SOCKETS_MAGIC_STRING )
